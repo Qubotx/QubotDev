@@ -7,11 +7,11 @@ Para una explicación detallada del código y el paso a paso para ponerlo en ope
 
 Para ejecutar la simulación:
 --------------------------------
-En un mundo vacío:<br>
-`ros2 launch tortubot sim.launch.py`<br>
+Se debe indicar la ruta absoluta al archivo de mundo de GazeboSim (archivo .sdf).
+Para descargar modelos y mundos personalizados desarrollados por la comunidad, visitar este sitio: https://app.gazebosim.org/dashboard
 
 En un mundo customizado:<br>
-`ros2 launch tortubot sim.launch.py world:=<ruta_al_archivo_sdf_sin_commillas>`<br>
+`ros2 launch tortubot sim.launch.py world:=<ruta_absoluta_al_archivo_sdf_sin_commillas>`<br>
 
 Para enviar órdenes de movimiento por medio de teclado:
 ---------------------------------

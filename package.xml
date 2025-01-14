@@ -4,7 +4,7 @@
   <name>tortubot</name>
   <version>0.0.1</version>
   <description>Paquete de pruebas para el robot educativo TortuBot</description>
-  <maintainer email="claudio.morales@i-labs.cl">cmoralesd</maintainer>
+  <maintainer email="claudio.morales55@inacapmail.cl">cmoralesd</maintainer>
   <license>Apache-2.0</license>
 
   <test_depend>ament_copyright</test_depend>

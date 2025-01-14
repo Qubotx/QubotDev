@@ -20,7 +20,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='cmoralesd',
-    maintainer_email='cear.inacap.cl@gmail.com',
+    maintainer_email='claudio.morales55@inacapmail.cl',
     description='Paquete base para el control de Tortubot en entorno de simulación',
     license='Apache-2.0',
     tests_require=['pytest'],
