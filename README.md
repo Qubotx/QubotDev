@@ -1,4 +1,5 @@
 ## qubot en ROS2 Jazzy y Gazebo Harmonic
+### prueba de actualización desde el equipp
 
 primera prueba de modificación de archivo para ros2 Paquete de pruebas para el control del robot educativo qubot en entorno de simulación.<br>
 El paquete ha sido creado siguiendo el procedimiento descrito por @ArticulatedRobotics (https://www.youtube.com/@ArticulatedRobotics). Gracias por la valiosa información!<br>
