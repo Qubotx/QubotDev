@@ -1,3 +1,9 @@
+## Introducción
+
+Este repositorio fue creado a partir de https://github.com/cmoralesd/tortubot
+
+fcoera-main y todas las ramas comenzando con fcoera son ramas de desarrollo y pruebas de Fcoera
+
 ## qubot en ROS2 Jazzy y Gazebo Harmonic
 
 Paquete de pruebas para el control del robot educativo qubot en entorno de simulación.<br>
