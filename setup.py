@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'qubot'
+package_name = 'QubotDev'
 
 setup(
     name=package_name,
@@ -21,7 +21,7 @@ setup(
     zip_safe=True,
     maintainer='cmoralesd',
     maintainer_email='claudio.morales55@inacapmail.cl',
-    description='Paquete base para el control de qubot en entorno de simulación',
+    description='Paquete base para el control de QubotDev en entorno de simulación',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={

@@ -15,7 +15,7 @@ from launch.event_handlers import OnProcessExit
 
 def generate_launch_description():
 
-    package_name='qubot'
+    package_name='QubotDev'
 
     rsp = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
