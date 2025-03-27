@@ -1,7 +1,7 @@
-## qubot en ROS2 Jazzy y Gazebo Harmonic
+## QubotDev en ROS2 Jazzy y Gazebo Harmonic
 ### prueba de actualización desde el equipp
 
-primera prueba de modificación de archivo para ros2 Paquete de pruebas para el control del robot educativo qubot en entorno de simulación.<br>
+primera prueba de modificación de archivo para ros2 Paquete de pruebas para el control del robot educativo QubotDev en entorno de simulación.<br>
 El paquete ha sido creado siguiendo el procedimiento descrito por @ArticulatedRobotics (https://www.youtube.com/@ArticulatedRobotics). Gracias por la valiosa información!<br>
 
 El paso a paso del procedimiento de este tutorial, se encuentra en los siguientes enlaces:<br>
@@ -10,14 +10,14 @@ Mapeo y localización SLAM: <br>
 Navegación autónoma: <br>
 
 ### 1. Descargar y verificar el proyecto base
-El proyecto base para iniciar la integración con los módulos de SLAM y NAV2 se encuentra en: https://github.com/cmoralesd/qubot/tree/main
+El proyecto base para iniciar la integración con los módulos de SLAM y NAV2 se encuentra en: https://github.com/cmoralesd/QubotDev/tree/main
 
 Para ejecutar la simulación:
 --------------------------------
 Se debe indicar la ruta absoluta al archivo de mundo de GazeboSim (archivo .sdf).
 Si desea descargar modelos y mundos desarrollados por la comunidad, visitar este sitio: https://app.gazebosim.org/dashboard
 
-`ros2 launch qubot sim.launch.py world:=<ruta_absoluta_al_archivo_sdf_sin_commillas>`<br>
+`ros2 launch QubotDev sim.launch.py world:=<ruta_absoluta_al_archivo_sdf_sin_commillas>`<br>
 
 Para enviar órdenes de movimiento por medio de teclado:
 ---------------------------------
