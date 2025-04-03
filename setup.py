@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'qubot'
+package_name = 'QubotDev'
 
 setup(
     name=package_name,
@@ -15,17 +15,20 @@ setup(
         (os.path.join('share/' + package_name, 'config'), glob(os.path.join('config', '*.*'))),
         (os.path.join('share/' + package_name, 'description'), glob(os.path.join('description', '*.*'))),
         (os.path.join('share/' + package_name, 'launch'), glob(os.path.join('launch', '*launch.py'))),
+        (os.path.join('share/' + package_name, 'worlds'), glob(os.path.join('worlds', '*.*'))),
         
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools',
+                      'pymodbus'],
     zip_safe=True,
     maintainer='cmoralesd',
     maintainer_email='claudio.morales55@inacapmail.cl',
-    description='Paquete base para el control de qubot en entorno de simulación',
+    description='Paquete base para el control de QubotDev en entorno de simulación',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'zlac8015d_bridge = QubotDev.zlac8015d_bridge:main',
         ],
     },
 )

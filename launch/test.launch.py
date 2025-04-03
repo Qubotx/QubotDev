@@ -73,10 +73,6 @@ def generate_launch_description():
     # Launch them all!
     return LaunchDescription([
         rsp,
-        world_arg,
-        gazebo,
-        spawn_entity,
-        ros_gz_bridge,
-        ros_gz_image_bridge,
+
 
     ])
