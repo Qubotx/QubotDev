@@ -3,8 +3,9 @@
 Historial de cambios:
 
 10/04/2025
-- se crean nodos para publicar y recibir tópicos de imagen vía cámara Ajustar
+- se crean nodos para publicar y recibir tópicos de imagen vía cámara Astra
 
+Para configurar la cámara:
 
 
 

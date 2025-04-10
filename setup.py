@@ -29,6 +29,8 @@ setup(
     entry_points={
         'console_scripts': [
             'zlac8015d_bridge = QubotDev.zlac8015d_bridge:main',
+            'image_publisher = QubotDev.image_publisher:main',
+            'image_subscriber = QubotDev.image_subscriber:main',
         ],
     },
 )
