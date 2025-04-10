@@ -2,6 +2,12 @@
 
 Historial de cambios:
 
+10/04/2025
+- se crean nodos para publicar y recibir tópicos de imagen vía cámara Ajustar
+
+
+
+
 03/04/2025
 - Se crea  zlac8015d_bridge.py, nodo para manejar tópicos de ros2 y enviarlos al driver de los motores.
 
