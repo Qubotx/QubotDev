@@ -77,6 +77,12 @@ def avanzar():
     motors.enable_motor()
 
 
+def avanzar2():
+    motors.set_mode(3)
+    motors.set_rpm(-20, 20)  # Avanza recto
+    time.sleep(2.0)
+
+
 def circulo_positivo():
     motors.set_mode(3)
     motors.set_rpm(-18, 3)  # Avanza en circulo hacia la derecha

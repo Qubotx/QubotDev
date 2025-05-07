@@ -32,6 +32,8 @@ from geometry_msgs.msg import Twist
 import QubotDev.ZLAC8015D_workinglib as ZLAC8015D
 import time
 
+import QubotDev.modo_espera as pre_movs
+
 # Modbus addresses
 MOTOR_1 = 1
 MOTOR_2 = 2
@@ -94,14 +96,24 @@ class zlac8015dBridge(Node):
 
         self.get_logger().info(f"{self.get_name()} started")
 
+        # Add subscriber for /control_cmd topic
+        self.control_cmd_sub = self.create_subscription(
+            String, "/control_cmd", self.control_cmd_callback, 1
+        )
+
     def timer_callback(self):
 
         # mueve los motores
         if self.new_data:
+            print("moviendo...")
             self.motors.set_mode(3)
             self.motors.set_rpm(self.left_vel, self.right_vel)
             time.sleep(2.0)
-            print("moviendo...")
+
+            # pre_movs.avanzar2()
+            # pre_movs.avanzar2()
+            # pre_movs.avanzar2()
+            # pre_movs.avanzar2()
 
             # self.motors.set_mode(3)
             # self.motors.set_rpm(-20, 20)  # Avanza recto
@@ -109,8 +121,9 @@ class zlac8015dBridge(Node):
             # self.motors.disable_motor()
             # time.sleep(0.00001)
             # self.motors.enable_motor()
-        else:
             print("waiting cmd_vel...")
+        else:
+            # print("waiting cmd_vel...")
             self.motors.set_rpm(0, 0)
         self.new_data = False
 
@@ -121,7 +134,7 @@ class zlac8015dBridge(Node):
         time_now = self.get_clock().now()
 
         if time_now.nanoseconds - self.time_last.nanoseconds > 100000:
-            scale = 1
+            scale = 0.05
             r = 0.0625
             b = 0.38
             vel = msg.linear.x * 5
@@ -131,6 +144,27 @@ class zlac8015dBridge(Node):
             print(self.left_vel, self.right_vel)
             self.new_data = True
             self.time_last = time_now
+            print(msg)
+
+    def control_cmd_callback(self, msg):
+        # Parse the command string (expects commands like 'forward', 'backward', 'left', 'right')
+        command = msg.data.strip().lower()
+        print(f"Received control command: {command}")
+        if command == "forward":
+            print("avanzando...")
+            pre_movs.avanzar2()
+            pass
+        elif command == "backward":
+            # TODO: Call function to move backward
+            pass
+        elif command == "left":
+            # TODO: Call function to turn left
+            pass
+        elif command == "right":
+            # TODO: Call function to turn right
+            pass
+        else:
+            print(f"Unknown control command: {command}")
 
 
 def main(args=None):
