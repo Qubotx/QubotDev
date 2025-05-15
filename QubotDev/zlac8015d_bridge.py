@@ -66,8 +66,6 @@ class zlac8015dBridge(Node):
         # Inicializar el controlador de motores
         self.motors = ZLAC8015D.Controller(port="/dev/ttyUSB0")
 
-        print("hola3!!!")
-
         # inicializa variables
         self.polling_period = 0.1  # sec
         self.time_last = self.get_clock().now()  # time in nanoseconds
@@ -105,7 +103,7 @@ class zlac8015dBridge(Node):
 
         # mueve los motores
         if self.new_data:
-            print("moviendo...")
+            self.get_logger().info(f"{self.get_name()} moving...")
             self.motors.set_mode(3)
             self.motors.set_rpm(self.left_vel, self.right_vel)
             time.sleep(2.0)
@@ -121,7 +119,7 @@ class zlac8015dBridge(Node):
             # self.motors.disable_motor()
             # time.sleep(0.00001)
             # self.motors.enable_motor()
-            print("waiting cmd_vel...")
+            self.get_logger().info(f"{self.get_name()} waiting cmd_vel...")
         else:
             # print("waiting cmd_vel...")
             self.motors.set_rpm(0, 0)
@@ -134,7 +132,7 @@ class zlac8015dBridge(Node):
         time_now = self.get_clock().now()
 
         if time_now.nanoseconds - self.time_last.nanoseconds > 100000:
-            scale = 0.05
+            scale = 1.0
             r = 0.0625
             b = 0.38
             vel = msg.linear.x * 5
@@ -144,27 +142,44 @@ class zlac8015dBridge(Node):
             print(self.left_vel, self.right_vel)
             self.new_data = True
             self.time_last = time_now
-            print(msg)
+            # print(msg)
 
     def control_cmd_callback(self, msg):
         # Parse the command string (expects commands like 'forward', 'backward', 'left', 'right')
         command = msg.data.strip().lower()
-        print(f"Received control command: {command}")
+        self.get_logger().info(f"{self.get_name()} received control command: {command}")
         if command == "forward":
-            print("avanzando...")
+            self.get_logger().info(f"{self.get_name()} going forward...")
             pre_movs.avanzar2()
             pass
         elif command == "backward":
-            # TODO: Call function to move backward
+            self.get_logger().info(f"{self.get_name()} going backward...")
+            pre_movs.retroceder2()
             pass
         elif command == "left":
-            # TODO: Call function to turn left
+            self.get_logger().info(f"{self.get_name()} turning left...")
+            pre_movs.medio_giro_negativo()
             pass
         elif command == "right":
-            # TODO: Call function to turn right
+            self.get_logger().info(f"{self.get_name()} turning right...")
+            pre_movs.medio_giro_positivo()
+            pass
+        elif command == "stop":
+            self.get_logger().info(f"{self.get_name()} stopping...")
+            pre_movs.detener()
+            pass
+        elif command == "rotate-neck-left":
+            self.get_logger().info(f"{self.get_name()} rotating neck left...")
+            # pre_movs.rotar_cabeza_izquierda()
+            pass
+        elif command == "rotate-neck-right":
+            self.get_logger().info(f"{self.get_name()} rotating neck right...")
+            # pre_movs.rotar_cabeza_derecha()
             pass
         else:
-            print(f"Unknown control command: {command}")
+            self.get_logger().error(
+                f"{self.get_name()} unknown control command: {command}"
+            )
 
 
 def main(args=None):
