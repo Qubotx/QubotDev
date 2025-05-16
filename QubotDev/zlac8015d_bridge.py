@@ -34,6 +34,8 @@ import time
 
 import QubotDev.modo_espera as pre_movs
 
+from QubotDev.pwm_neck_control import set_neck_angle
+
 # Modbus addresses
 MOTOR_1 = 1
 MOTOR_2 = 2
@@ -170,11 +172,11 @@ class zlac8015dBridge(Node):
             pass
         elif command == "rotate-neck-left":
             self.get_logger().info(f"{self.get_name()} rotating neck left...")
-            # pre_movs.rotar_cabeza_izquierda()
+            set_neck_angle(90 + 26)
             pass
         elif command == "rotate-neck-right":
             self.get_logger().info(f"{self.get_name()} rotating neck right...")
-            # pre_movs.rotar_cabeza_derecha()
+            set_neck_angle(90 - 26)
             pass
         else:
             self.get_logger().error(
