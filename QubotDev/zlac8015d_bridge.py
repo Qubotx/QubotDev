@@ -28,7 +28,6 @@ from geometry_msgs.msg import Twist
 
 
 # from pymodbus.client import ModbusSerialClient
-# import QubotDev.ZLAC8015D.ZLAC8015D as ZLAC8015D
 import QubotDev.ZLAC8015D_workinglib as ZLAC8015D
 import time
 

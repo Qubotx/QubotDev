@@ -1,7 +1,5 @@
-# import QubotDev.ZLAC8015D_lib as ZLAC8015D
 import QubotDev.ZLAC8015D_workinglib as ZLAC8015D
 
-# import ZLAC8015D_lib as ZLAC8015D
 import time
 from pynput import keyboard
 
