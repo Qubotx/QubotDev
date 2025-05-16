@@ -172,7 +172,11 @@ class zlac8015dBridge(Node):
             pass
         elif command == "rotate-neck-left":
             self.get_logger().info(f"{self.get_name()} rotating neck left...")
-            set_neck_angle(90 + 26)
+            set_neck_angle(90 + 20)
+            pass
+        elif command == "center-neck":
+            self.get_logger().info(f"{self.get_name()} centering neck...")
+            set_neck_angle(90)
             pass
         elif command == "rotate-neck-right":
             self.get_logger().info(f"{self.get_name()} rotating neck right...")
