@@ -27,13 +27,13 @@ class NeckServoBridge(Node):
         self.get_logger().info(f"Received control command: {command}")
         if command == "rotate-neck-left":
             self.get_logger().info("Rotating neck left by 5 degrees...")
-            rotate_neck_relative(5)
+            rotate_neck_relative(-5)
         elif command == "center-neck":
             self.get_logger().info("Centering neck...")
             set_neck_angle(90)
         elif command == "rotate-neck-right":
             self.get_logger().info("Rotating neck right by 5 degrees...")
-            rotate_neck_relative(-5)
+            rotate_neck_relative(5)
 
 
 def main(args=None):
