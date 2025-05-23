@@ -20,7 +20,12 @@ class SubscriberNodeClass(Node):
     def listener_callback_function(self, imageMessage):
         self.get_logger().info('Image frame received')
         openCVImage = self.bridgeObject.imgmsg_to_cv2(imageMessage)
-        cv2.imshow("Camera Video", openCVImage)
+        
+        window_name = "Camera Video"
+        cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        
+        cv2.imshow(window_name, openCVImage)
         cv2.waitKey(1)
 
 def main(args=None):

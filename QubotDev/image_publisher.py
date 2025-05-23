@@ -9,7 +9,7 @@ class PublisherNodeClass(Node):
     def __init__(self):
         super().__init__('image_publisher_node')
 
-        self.cameraDeviceNumber=2 #número de cámara asignado por Ubuntu
+        self.cameraDeviceNumber=0 #número de cámara asignado por Ubuntu
                                   #verificar con: ls /dev/ | grep video
 
         self.camera = cv2.VideoCapture(self.cameraDeviceNumber)
