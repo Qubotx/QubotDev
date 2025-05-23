@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String
 from QubotDev.pwm_neck_control import set_neck_angle, rotate_neck_relative
 
 
