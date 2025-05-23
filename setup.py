@@ -39,6 +39,7 @@ setup(
         "console_scripts": [
             "modo_espera = QubotDev.modo_espera:main",
             "zlac8015d_bridge = QubotDev.zlac8015d_bridge:main",
+            "neck_servo_bridge = QubotDev.neck_servo_bridge:main",
             "image_publisher = QubotDev.image_publisher:main",
             "image_subscriber = QubotDev.image_subscriber:main",
         ],
