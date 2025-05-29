@@ -3,6 +3,8 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 
+from QubotDev.routines import define_routines
+
 
 class QubotWalk(Node):
     def __init__(self):
@@ -34,73 +36,13 @@ class QubotWalk(Node):
         self.step_start_time = None
 
         # Define movement routines
-        self.routines = self.define_routines()
+        self.routines = define_routines()
 
         self.get_logger().info("QubotWalk node with routines started")
         self.get_logger().info(f"Available routines: {list(self.routines.keys())}")
         self.get_logger().info(
             f"Basic movement settings: {self.publish_interval*1000:.0f}ms interval, {self.movement_duration}s duration"
         )
-
-    def define_routines(self):
-        """
-        Define movement routines as sequences of (linear_speed, angular_speed, duration)
-        """
-        routines = {
-            "routine1": [
-                (0.3, 0.0, 1.5),  # move straight at 0.3m/s for 1.5s
-                (0.3, 0.2, 0.5),  # curve at 0.3m/s with 0.2rad/s for 0.5s
-                (0.0, -0.5, 3.0),  # rotate in place at -0.5rad/s for 3s
-            ],
-            "routine2": [
-                (0.2, 0.0, 2.0),  # slow forward for 2s
-                (0.0, 1.0, 1.57),  # turn left 90 degrees (π/2 rad in 1.57s at 1rad/s)
-                (0.3, 0.0, 1.0),  # forward again for 1s
-                (0.0, -1.0, 1.57),  # turn right 90 degrees
-            ],
-            "routine3": [
-                (0.3, 0.0, 1.0),  # forward
-                (0.0, 0.5, 3.14),  # 180 degree turn (π rad in ~6.28s at 0.5rad/s)
-                (0.3, 0.0, 1.0),  # forward again
-                (0.0, 0.0, 0.5),  # pause for 0.5s
-            ],
-            "forward": [
-                (0.3, 0.0, 2.0),  # forward
-            ],
-            "backward": [
-                (-0.3, 0.0, 2.0),  # backward
-            ],
-            "left": [
-                (0.0, 0.5, 2.0),  # left
-            ],
-            "right": [
-                (0.0, -0.5, 2.0),  # right
-            ],
-            "test": [
-                (0.5, 0.0, 3.0),  # forward
-                (-0.5, 0.0, 3.0),  # backward
-                (0.5, 0.0, 3.0),  # forward
-                (-0.5, 0.0, 3.0),  # backward
-                (0.5, 0.0, 3.0),  # forward
-                (-0.5, 0.0, 3.0),  # backward
-            ],
-            "test_forward": [
-                (0.5, 0.0, 3.0),  # forward
-                (0.0, 0.0, 1.0),  # pause
-                (0.5, 0.0, 3.0),  # forward
-                (0.0, 0.0, 1.0),  # pause
-                (0.5, 0.0, 3.0),  # forward
-                (0.0, 0.0, 1.0),  # pause
-                (0.5, 0.0, 3.0),  # forward
-                (0.0, 0.0, 1.0),  # pause
-                (0.5, 0.0, 3.0),  # forward
-                (0.0, 0.0, 1.0),  # pause
-                (0.5, 0.0, 3.0),  # forward
-                (0.0, 0.0, 1.0),  # pause
-                (0.5, 0.0, 3.0),  # forward
-            ],
-        }
-        return routines
 
     def control_cmd_callback(self, msg):
         """

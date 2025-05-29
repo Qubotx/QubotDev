@@ -55,10 +55,10 @@ class zlac8015dBridge(Node):
 
         # Initialize motors
         self.motors.disable_motor()
-        self.motors.set_accel_time(2000, 2000)
-        self.motors.set_decel_time(2000, 2000)
+        self.motors.set_accel_time(100, 100)
+        self.motors.set_decel_time(100, 100)
         self.motors.set_maxRPM_pos(self.max_rpm, self.max_rpm)
-        self.motors.enable_motor()
+        # self.motors.enable_motor()
         self.moving = False
 
         self.count = 0
