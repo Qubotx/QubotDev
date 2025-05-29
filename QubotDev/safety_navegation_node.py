@@ -279,6 +279,10 @@ class SafetyNavigationNode(Node):
                 )
                 # return False
                 continue
+            else:
+                self.get_logger().info(
+                    f"Data from sensor {sensor_name}: {sensor_range}m"
+                )
 
             # Calculate sensor position in robot frame
             # Sensor angle relative to world
@@ -297,13 +301,13 @@ class SafetyNavigationNode(Node):
             )
 
             if distance_to_robot_center < (self.robot_radius + self.min_safe_distance):
-                self.get_logger().debug(
+                self.get_logger().info(
                     f"Collision predicted with obstacle detected by {sensor_name}"
                 )
-                self.get_logger().debug(
+                self.get_logger().info(
                     f"Robot pos: ({x:.2f}, {y:.2f}), Obstacle pos: ({obstacle_x:.2f}, {obstacle_y:.2f})"
                 )
-                self.get_logger().debug(
+                self.get_logger().info(
                     f"Distance: {distance_to_robot_center:.2f}m, Required: {self.robot_radius + self.min_safe_distance:.2f}m"
                 )
                 return False
