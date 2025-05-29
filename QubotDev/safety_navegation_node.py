@@ -87,9 +87,11 @@ class SafetyNavigationNode(Node):
         }
 
         # Timing parameters
-        self.data_timeout = 0.150  # 150ms - sensor data timeout
-        self.averaging_window = 0.100  # 100ms - averaging window
-        self.prediction_time = 0.500  # 500ms - collision prediction time
+        self.data_timeout = 2.5  # 2.5s - sensor data timeout
+        self.averaging_window = 1.5  # 1s - averaging window
+
+        self.dt = 0.100  # 100ms - time step
+        self.prediction_time = 0.300  # 300ms - collision prediction time
 
         # Safety parameters
         self.min_safe_distance = 0.3  # meters - minimum safe distance
@@ -220,7 +222,7 @@ class SafetyNavigationNode(Node):
         Returns list of (x, y, theta) positions
         """
         trajectory_points = []
-        dt = 0.05  # 50ms time steps
+        dt = self.dt
         steps = int(duration / dt)
 
         # Current position (robot starts at origin with 0 orientation)
