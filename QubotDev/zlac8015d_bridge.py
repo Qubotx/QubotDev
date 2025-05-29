@@ -1,37 +1,10 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
 from geometry_msgs.msg import Twist
+from rclpy.time import Duration
 
-
-# import pymodbus.client.sync as _sync
-
-# # patch write_register
-# _orig_wr = _sync.ModbusSerialClient.write_register
-
-
-# def _write_register(self, address, value, device_id=None, **kw):
-#     return _orig_wr(self, address, value, unit=device_id, **kw)
-
-
-# _sync.ModbusSerialClient.write_register = _write_register
-
-# # patch write_registers
-# _orig_wrs = _sync.ModbusSerialClient.write_registers
-
-
-# def _write_registers(self, address, values, device_id=None, **kw):
-#     return _orig_wrs(self, address, values, unit=device_id, **kw)
-
-
-# _sync.ModbusSerialClient.write_registers = _write_registers
-
-
-# from pymodbus.client import ModbusSerialClient
 import QubotDev.ZLAC8015D_workinglib as ZLAC8015D
 import time
-
-import QubotDev.modo_espera as pre_movs
 
 # Modbus addresses
 MOTOR_1 = 1
@@ -55,122 +28,151 @@ LED_BUILTIN = 10001
 BUZZER = 10002
 
 
-def scale(value):
-    return (128 + int(value * 128.0 / 100.0)) * 128
-
-
 class zlac8015dBridge(Node):
     def __init__(self):
         super().__init__("zlac8015d_bridge")
-        # Inicializar el controlador de motores
+
+        # Robot physical parameters
+        self.wheel_radius = 0.065  # meters
+        self.wheel_base = 0.38  # meters (distance between wheels)
+
+        # Control parameters
+        self.max_linear_vel = 0.5  # m/s
+        self.max_angular_vel = 0.5  # rad/s
+        self.max_rpm = 73  # Maximum motor RPM
+        self.cmd_timeout = 0.15  # sec - se detiene si no se recibe cmd_vel
+        self.min_cmd_interval = 0.05  # sec - minimum time between processing commands
+
+        # Initialize motor controller
         self.motors = ZLAC8015D.Controller(port="/dev/ttyUSB0")
 
-        # inicializa variables
-        self.polling_period = 0.1  # sec
-        self.time_last = self.get_clock().now()  # time in nanoseconds
-        self.ctrl_vel = {"vx": 0, "vy": 0, "vr": 0}
-        self.left_vel = 0
-        self.right_vel = 0
-        self.new_data = False
+        # Control state variables
+        self.last_cmd_time = self.get_clock().now() - Duration(seconds=1.0)
+        self.last_process_time = self.last_cmd_time
+        self.current_left_vel = 0
+        self.current_right_vel = 0
+        self.cmd_received = False
 
-        # inicializa los motores
+        # Initialize motors
         self.motors.disable_motor()
-        self.motors.set_accel_time(
-            100, 100
-        )  # Reducir tiempo de aceleración para mayor sensibilidad
-        self.motors.set_decel_time(
-            100, 100
-        )  # Reducir tiempo de desaceleración para frenados más rápidos
-        # self.motors.set_maxRPM_pos(22.5, 22.5)
+        self.motors.set_accel_time(2000, 2000)
+        self.motors.set_decel_time(2000, 2000)
+        self.motors.set_maxRPM_pos(self.max_rpm, self.max_rpm)
         self.motors.enable_motor()
+        self.moving = False
 
+        self.count = 0
+
+        # Tiempo para el control de motor.
+        self.polling_period = 0.01  # 100Hz
         self.timer = self.create_timer(self.polling_period, self.timer_callback)
 
-        # inicializa publicadores
-        self.cmd_vel = self.create_subscription(
-            Twist, "/cmd_vel", self.cmd_vel_callback, 1
+        # Subscriber for cmd_vel messages
+        self.cmd_vel_sub = self.create_subscription(
+            Twist, "/cmd_vel", self.cmd_vel_callback, 10
         )
 
-        self.get_logger().info(f"{self.get_name()} started")
-
-        # Add subscriber for /control_cmd topic
-        self.control_cmd_sub = self.create_subscription(
-            String, "/control_cmd", self.control_cmd_callback, 1
+        self.get_logger().info(
+            f"{self.get_name()} started with improved cmd_vel handling"
         )
-
-    def timer_callback(self):
-
-        # mueve los motores
-        if self.new_data:
-            self.get_logger().info(f"{self.get_name()} moving...")
-            self.motors.set_mode(3)
-            self.motors.set_rpm(self.left_vel, self.right_vel)
-            time.sleep(2.0)
-
-            # pre_movs.avanzar2()
-            # pre_movs.avanzar2()
-            # pre_movs.avanzar2()
-            # pre_movs.avanzar2()
-
-            # self.motors.set_mode(3)
-            # self.motors.set_rpm(-20, 20)  # Avanza recto
-            # time.sleep(2.0)
-            # self.motors.disable_motor()
-            # time.sleep(0.00001)
-            # self.motors.enable_motor()
-            self.get_logger().info(f"{self.get_name()} waiting cmd_vel...")
-        else:
-            # print("waiting cmd_vel...")
-            self.motors.set_rpm(0, 0)
-        self.new_data = False
-
-        time.sleep(0.01)
 
     def cmd_vel_callback(self, msg):
-        # lee el mensaje
-        time_now = self.get_clock().now()
+        """
+        Improved cmd_vel callback with proper throttling and safety checks
+        """
+        current_time = self.get_clock().now()
 
-        if time_now.nanoseconds - self.time_last.nanoseconds > 100000:
-            scale = 1.0
-            r = 0.0625
-            b = 0.38
-            vel = msg.linear.x * 5
-            omega = msg.angular.z
-            self.left_vel = int(scale * 1 / r * (omega + b * vel))
-            self.right_vel = int(scale * 1 / r * (omega - b * vel))
-            print(self.left_vel, self.right_vel)
-            self.new_data = True
-            self.time_last = time_now
-            # print(msg)
+        # Check if enough time has passed since last processing (anti-spam)
+        time_since_last_process = (
+            current_time - self.last_process_time
+        ).nanoseconds / 1e9
+        if time_since_last_process < self.min_cmd_interval:
+            return
 
-    def control_cmd_callback(self, msg):
-        # Parse the command string (expects commands like 'forward', 'backward', 'left', 'right')
-        command = msg.data.strip().lower()
-        self.get_logger().info(f"{self.get_name()} received control command: {command}")
-        if command == "forward":
-            self.get_logger().info(f"{self.get_name()} going forward...")
-            pre_movs.avanzar2()
-            pass
-        elif command == "backward":
-            self.get_logger().info(f"{self.get_name()} going backward...")
-            pre_movs.retroceder2()
-            pass
-        elif command == "left":
-            self.get_logger().info(f"{self.get_name()} turning left...")
-            pre_movs.medio_giro_negativo()
-            pass
-        elif command == "right":
-            self.get_logger().info(f"{self.get_name()} turning right...")
-            pre_movs.medio_giro_positivo()
-            pass
-        elif command == "stop":
-            self.get_logger().info(f"{self.get_name()} stopping...")
-            pre_movs.detener()
-            pass
-        else:
-            self.get_logger().error(
-                f"{self.get_name()} unknown control command: {command}"
+        # Update timing
+        self.last_cmd_time = current_time
+        self.last_process_time = current_time
+
+        # Extract and limit velocities
+        linear_vel = self.clamp(msg.linear.x, -self.max_linear_vel, self.max_linear_vel)
+        angular_vel = self.clamp(
+            msg.angular.z, -self.max_angular_vel, self.max_angular_vel
+        )
+
+        # Convert to wheel velocities using differential drive kinematics
+        # v_left = (linear_vel - angular_vel * wheel_base/2) / wheel_radius
+        # v_right = (linear_vel + angular_vel * wheel_base/2) / wheel_radius
+        left_wheel_vel = (
+            linear_vel - angular_vel * self.wheel_base / 2
+        ) / self.wheel_radius
+        right_wheel_vel = (
+            linear_vel + angular_vel * self.wheel_base / 2
+        ) / self.wheel_radius
+
+        # Convert from rad/s to RPM
+        left_rpm = -left_wheel_vel * 60 / (2 * 3.14159)
+        right_rpm = right_wheel_vel * 60 / (2 * 3.14159)
+
+        # Limit RPM to motor capabilities
+        self.current_left_vel = int(self.clamp(left_rpm, -self.max_rpm, self.max_rpm))
+        self.current_right_vel = int(self.clamp(right_rpm, -self.max_rpm, self.max_rpm))
+
+        self.cmd_received = True
+
+        # Log significant velocity changes (optional, for debugging)
+        if abs(linear_vel) > 0.1 or abs(angular_vel) > 0.1 or True:
+            self.get_logger().info(
+                f"cmd_vel: linear={msg.linear.x} angular={msg.angular.z} "
+                f"=> used: linear={linear_vel:.2f} angular={angular_vel:.2f} "
+                f"=> RPM: L={self.current_left_vel} R={self.current_right_vel}"
             )
+
+    def timer_callback(self):
+        """
+        Improved timer callback with timeout handling and smooth control
+        """
+        current_time = self.get_clock().now()
+        time_since_last_cmd = (current_time - self.last_cmd_time).nanoseconds / 1e9
+
+        # print("Corrientes: ", self.motors.get_motor_current())
+
+        # Check for command timeout
+        if time_since_last_cmd > self.cmd_timeout:
+            if self.moving:
+                self.get_logger().info("cmd_vel timeout - stopping motors")
+                self.cmd_received = False
+                self.moving = False
+                # Si disable_motor() es llamada muy seguido muy rapido (<50ms) no se logra desactivar
+                self.motors.disable_motor()
+            self.current_left_vel = 0
+            self.current_right_vel = 0
+
+        else:
+            try:
+                if self.cmd_received:
+                    self.motors.enable_motor()
+                    self.motors.set_mode(3)
+                    self.get_logger().info(
+                        f"RPM: L={self.current_left_vel} R={self.current_right_vel}"
+                    )
+
+                    self.motors.set_rpm(self.current_left_vel, self.current_right_vel)
+                    self.moving = True
+                    self.cmd_received = False
+            except Exception as e:
+                self.get_logger().error(f"Motor control error: {e}")
+
+        # # Small delay to prevent overwhelming the motor controller
+        # time.sleep(0.01)
+
+    def clamp(self, value, min_val, max_val):
+        """
+        Utility function to clamp a value between min and max
+        """
+        return max(min_val, min(value, max_val))
+
+    # Control command handling has been moved to the qubot_walk node
+    # which publishes Twist messages to /cmd_vel
 
 
 def main(args=None):
@@ -178,11 +180,15 @@ def main(args=None):
         rclpy.init(args=args)
         zlac8015d_bridge = zlac8015dBridge()
         rclpy.spin(zlac8015d_bridge)
-
     except KeyboardInterrupt:
-        print(" ... exit node")
+        print("Shutting down zlac8015d_bridge node...")
     except Exception as e:
-        print(e)
+        print(f"Error in zlac8015d_bridge: {e}")
+    finally:
+        if "zlac8015d_bridge" in locals():
+            zlac8015d_bridge.destroy_node()
+        rclpy.shutdown()
+        pre_movs.detener()
 
 
 if __name__ == "__main__":
