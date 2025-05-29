@@ -42,6 +42,7 @@ setup(
             "qubot_walk = QubotDev.qubot_walk:main",
             "neck_servo_bridge = QubotDev.neck_servo_bridge:main",
             "safety_navigation_node = QubotDev.safety_navegation_node:main",
+            "sensor_fusion_node = QubotDev.sensor_fusion_node:main",
             # "image_publisher = QubotDev.image_publisher:main",
             # "image_subscriber = QubotDev.image_subscriber:main",
         ],
