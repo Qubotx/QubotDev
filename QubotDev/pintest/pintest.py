@@ -85,6 +85,14 @@ class Pin33Controller:
         GPIO.output(self.pin, GPIO.LOW)
         print("Pin set to LOW (0V)")
 
+    def set_output(self):
+        """Set pin to output mode"""
+        if self.pwm_enabled:
+            print("Warning: PWM is enabled. Disable PWM first for clean GPIO control.")
+            return
+        GPIO.setup(self.pin, GPIO.OUT)
+        print("Pin set to output mode")
+
     def get_status(self):
         """Display current pin status"""
         print(f"\n--- Pin {self.pin} Status ---")
@@ -113,6 +121,7 @@ Available Commands:
     freq <Hz>       - Set PWM frequency in Hz
     high            - Set pin HIGH (3.3V)
     low             - Set pin LOW (0V)
+    output          - Set pin to output mode    
     status          - Show current pin status
     help            - Show this help
     exit/quit       - Exit program
@@ -181,6 +190,8 @@ def main():
                     controller.set_high()
                 elif cmd == "low":
                     controller.set_low()
+                elif cmd == "output":
+                    controller.set_output()
                 else:
                     print(
                         f"Unknown command: {cmd}. Type 'help' for available commands."
