@@ -94,8 +94,8 @@ class SafetyNavigationNode(Node):
         self.prediction_time = 0.300  # 300ms - collision prediction time
 
         # Safety parameters
-        self.min_safe_distance = 0.3  # meters - minimum safe distance
-        self.robot_radius = 0.46  # meters - robot radius for collision detection
+        self.min_safe_distance = 0.30  # meters - minimum safe distance
+        self.robot_radius = 0.46 / 2  # meters - robot radius for collision detection
 
         # State management
         self.last_cmd_vel = None
@@ -174,7 +174,7 @@ class SafetyNavigationNode(Node):
             self.cmd_vel_publisher.publish(halt_msg)
 
             if not self.is_paused:
-                self.publish_control_command("pause")
+                self.publish_control_command("safety_pause")
                 self.is_paused = True
                 self.get_logger().warn("Movement paused - collision predicted")
 
@@ -191,7 +191,7 @@ class SafetyNavigationNode(Node):
                 self.publish_control_command("resume")
                 self.is_paused = False
                 self.get_logger().info(
-                    "Movement automatically resumed - obstacle cleared"
+                    f"Movement automatically resumed - obstacle cleared - linear={self.last_cmd_vel.linear.x:.2f} angular={self.last_cmd_vel.angular.z:.2f}"
                 )
 
     def is_movement_safe_geometric(self, cmd_vel):
@@ -204,17 +204,22 @@ class SafetyNavigationNode(Node):
             and abs(cmd_vel.linear.y) < 0.01
             and abs(cmd_vel.angular.z) < 0.01
         ):
+            self.get_logger().info(
+                f"Safe: too small linear={cmd_vel.linear.x:.2f} angular={cmd_vel.angular.z:.2f}"
+            )
             return True
 
         # Calculate robot's predicted trajectory
         trajectory_points = self.calculate_trajectory(cmd_vel, self.prediction_time)
 
-        # Check each trajectory point against all sensors
-        for point in trajectory_points:
-            if not self.is_point_safe(point):
-                return False
-
-        return True
+        # Check trajectory points considering movement direction
+        if self.is_trajectory_safe(trajectory_points):
+            return True
+        else:
+            self.get_logger().info(
+                f"Movement unsafe with linear={cmd_vel.linear.x:.2f} angular={cmd_vel.angular.z:.2f} speeds"
+            )
+            return False
 
     def calculate_trajectory(self, cmd_vel, duration):
         """
@@ -264,11 +269,31 @@ class SafetyNavigationNode(Node):
 
         return trajectory_points
 
-    def is_point_safe(self, robot_position):
+    def is_trajectory_safe(self, trajectory_points):
         """
-        Check if a robot position (x, y, theta) is safe given current sensor readings
+        Check if trajectory is safe by comparing consecutive points
+        to determine if robot is moving towards or away from obstacles
         """
-        x, y, theta = robot_position
+        if len(trajectory_points) < 2:
+            return True
+
+        # Check each pair of consecutive trajectory points
+        for i in range(1, len(trajectory_points)):
+            current_point = trajectory_points[i]
+            previous_point = trajectory_points[i - 1]
+
+            if not self.is_movement_direction_safe(previous_point, current_point):
+                return False
+
+        return True
+
+    def is_movement_direction_safe(self, previous_position, current_position):
+        """
+        Check if movement from previous to current position is safe
+        by comparing distances to obstacles
+        """
+        prev_x, prev_y, prev_theta = previous_position
+        curr_x, curr_y, curr_theta = current_position
 
         # Check each sensor
         for sensor_name, sensor_info in self.sensor_config.items():
@@ -276,48 +301,66 @@ class SafetyNavigationNode(Node):
 
             # Skip if no sensor data available
             if sensor_range is None:
-                self.get_logger().info(
+                self.get_logger().debug(
                     f"No data from sensor {sensor_name}, assuming unsafe"
                 )
-                # return False
+                # return False  # Uncomment if you want to be conservative
                 continue
             else:
-                self.get_logger().info(
+                self.get_logger().debug(
                     f"Data from sensor {sensor_name}: {sensor_range}m"
                 )
 
-            # Calculate sensor position in robot frame
-            # Sensor angle relative to world
-            sensor_angle = sensor_info["angle"] + theta
-            # Assume sensors are at the borders of the robot
-            sensor_x = x + self.robot_radius * math.cos(sensor_angle)
-            sensor_y = y + self.robot_radius * math.sin(sensor_angle)
-
-            # Calculate obstacle position based on sensor reading
-            obstacle_x = sensor_x + sensor_range * math.cos(sensor_angle)
-            obstacle_y = sensor_y + sensor_range * math.sin(sensor_angle)
-
-            # Check if obstacle intersects with robot's predicted position
-            distance_to_robot_center = math.sqrt(
-                (obstacle_x - x) ** 2 + (obstacle_y - y) ** 2
+            # Calculate distances for both positions
+            prev_distance = self.calculate_trajectory_point_to_obstacle_distance(
+                previous_position, sensor_name, sensor_range
+            )
+            curr_distance = self.calculate_trajectory_point_to_obstacle_distance(
+                current_position, sensor_name, sensor_range
             )
 
-            if distance_to_robot_center < (self.robot_radius + self.min_safe_distance):
-                self.get_logger().info(
-                    f"Collision predicted with obstacle detected by {sensor_name}"
-                )
-                self.get_logger().info(
-                    f"Robot pos: ({x:.2f}, {y:.2f}), Obstacle pos: ({obstacle_x:.2f}, {obstacle_y:.2f})"
-                )
-                self.get_logger().info(
-                    f"Distance: {distance_to_robot_center:.2f}m, Required: {self.robot_radius + self.min_safe_distance:.2f}m"
-                )
-                return False
+            # Check if we're moving towards the obstacle and getting too close
+            if curr_distance < prev_distance:  # Moving towards obstacle
+                if curr_distance < (self.robot_radius + self.min_safe_distance):
+                    self.get_logger().info(
+                        f"Collision predicted with obstacle detected by {sensor_name} with range {sensor_range:.2f}m"
+                    )
+                    self.get_logger().info(
+                        f"Required safe distance: {self.robot_radius + self.min_safe_distance:.2f}m but init_dist={prev_distance:.3f}m, final_dist={curr_distance:.3f}m. "
+                    )
+                    return False
+            # If curr_distance >= prev_distance, we're moving away from or parallel to obstacle
+            # which is safe, so we continue checking other sensors
 
         return True
 
+    def calculate_trajectory_point_to_obstacle_distance(
+        self, trajectory_point, sensor_name, sensor_range
+    ):
+        """
+        Calculate distance from robot center to obstacle detected by sensor
+        """
+        x, y, theta = trajectory_point
+        sensor_info = self.sensor_config[sensor_name]
+
+        # Calculate sensor position in robot frame at the begining of the trajectory (x,y, and theta 0)
+        sensor_angle = sensor_info["angle"] + 0
+        sensor_x = 0 + self.robot_radius * math.cos(sensor_angle)
+        sensor_y = 0 + self.robot_radius * math.sin(sensor_angle)
+
+        # Calculate obstacle position based on sensor reading
+        obstacle_x = sensor_x + sensor_range * math.cos(sensor_angle)
+        obstacle_y = sensor_y + sensor_range * math.sin(sensor_angle)
+
+        # Calculate distance from robot center to obstacle
+        distance_to_robot_center = math.sqrt(
+            (obstacle_x - x) ** 2 + (obstacle_y - y) ** 2
+        )
+
+        return distance_to_robot_center
+
     def publish_control_command(self, command):
-        """Publish control command (pause/resume)"""
+        """Publish control command (safety_pause/resume)"""
         msg = String()
         msg.data = command
         self.control_cmd_publisher.publish(msg)

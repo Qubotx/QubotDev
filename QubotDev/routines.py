@@ -15,21 +15,21 @@ def define_routines():
         # straight backward at 0.136 m/s for 2s
         "backward": [(-0.136, 0.0, 2.0)],
         # rotate right 45° (π/4 rad) in 0.5s
-        "right": [(0.0, -1.571, 0.5)],
+        "right": [(0.0, -0.7854, 1)],
         # rotate left 45° (π/4 rad) in 0.5s
-        "left": [(0.0, 1.571, 0.5)],
-        # rotate right 90° (π/2 rad) in 1s
-        "cuarto_giro_derecha": [(0.0, -1.571, 1)],
-        # rotate left 90° (π/2 rad) in 1s
-        "cuarto_giro_izquierda": [(0.0, 1.571, 1)],
-        # rotate right 180° (π rad) in 2s
-        "medio_giro_derecha": [(0.0, -1.571, 2)],
-        # rotate left 180° (π rad) in 2s
-        "medio_giro_izquierda": [(0.0, 1.571, 2)],
-        # rotate right 360° (2π rad) in 4s
-        "giro_completo_derecha": [(0.0, -1.571, 4)],
-        # rotate left 360° (2π rad) in 4s
-        "giro_completo_izquierda": [(0.0, 1.571, 4)],
+        "left": [(0.0, 0.7854, 1)],
+        # rotate right 90° (π/2 rad) in 2s
+        "cuarto_giro_derecha": [(0.0, -0.7854, 2)],
+        # rotate left 90° (π/2 rad) in 2s
+        "cuarto_giro_izquierda": [(0.0, 0.7854, 2)],
+        # rotate right 180° (π rad) in 4s
+        "medio_giro_derecha": [(0.0, -0.7854, 4)],
+        # rotate left 180° (π rad) in 4s
+        "medio_giro_izquierda": [(0.0, 0.7854, 4)],
+        # rotate right 360° (2π rad) in 8s
+        "giro_completo_derecha": [(0.0, -0.7854, 8)],
+        # rotate left 360° (2π rad) in 8s
+        "giro_completo_izquierda": [(0.0, 0.7854, 8)],
         # curved path: forward 0.113 m/s, turning right 0.567 rad/s for 5s
         "circulo_derecha": [(0.113, -0.567, 5.0)],
         # curved path: forward 0.113 m/s, turning left 0.567 rad/s for 5s
@@ -40,19 +40,19 @@ def define_routines():
         "wait_long": [(0.0, 0.0, 1.5)],
     }
 
+    # Build complex routines using basic moves
+    routines = basic_moves.copy()  # Include all basic moves
+
     # Helper function to combine routines
     def combine_routines(*routine_names):
         """Combine multiple routines into one sequence"""
         combined = []
         for name in routine_names:
-            if name in basic_moves:
-                combined.extend(basic_moves[name])
+            if name in routines:
+                combined.extend(routines[name])
             else:
                 print(f"Warning: Routine '{name}' not found in basic_moves")
         return combined
-
-    # Build complex routines using basic moves
-    routines = basic_moves.copy()  # Include all basic moves
 
     # Complex routines built from basic moves
     routines["rutina_paseo"] = combine_routines(
@@ -122,13 +122,47 @@ def define_routines():
         "giro_completo_derecha",
     )
 
-    routines["routine1"] = [
-        (0.3, 0.0, 1.5),  # move straight at 0.3m/s for 1.5s
-        (0.3, 0.2, 0.5),  # curve at 0.3m/s with 0.2rad/s for 0.5s
-        (0.0, -0.5, 3.0),  # rotate in place at -0.5rad/s for 3s
+    routines["shakes_right"] = [
+        (0.0, -0.75, 0.6),  # shake right
+        (0.0, 0.75, 0.6),  # shake left
+        (0.0, -0.75, 0.6),  # shake right
+        (0.0, 0.75, 0.6),  # shake left
+    ]
+    routines["shakes_left"] = [
+        (0.0, 0.75, 0.6),  # shake left
+        (0.0, -0.75, 0.6),  # shake right
+        (0.0, 0.75, 0.6),  # shake left
+        (0.0, -0.75, 0.6),  # shake right
     ]
 
-    routines["test"] = [
+    routines["swing_right"] = [
+        (0.0, -0.375, 1.2),  # swing right
+        (0.0, 0.375, 1.2),  # swing left
+    ]
+    routines["swing_left"] = [
+        (0.0, 0.375, 1.2),  # swing left
+        (0.0, -0.375, 1.2),  # swing right
+    ]
+
+    routines["sacudelo"] = combine_routines(
+        "shakes_right",
+        "swing_right",
+        "shakes_left",
+        "swing_left",
+        "shakes_right",
+        "swing_right",
+        "shakes_left",
+        "swing_left",
+    )
+
+    routines["vueltas"] = combine_routines(
+        "giro_completo_derecha",
+        "giro_completo_izquierda",
+        "giro_completo_derecha",
+        "giro_completo_izquierda",
+    )
+
+    routines["tst"] = [
         (0.5, 0.0, 3.0),  # forward
         (-0.5, 0.0, 3.0),  # backward
         (0.5, 0.0, 3.0),  # forward
@@ -151,6 +185,20 @@ def define_routines():
         (0.5, 0.0, 3.0),  # forward
         (0.0, 0.0, 1.0),  # pause
         (0.5, 0.0, 3.0),  # forward
+    ]
+    routines["test_forward6"] = [
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
+    ]
+    routines["mati"] = [
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
+        (0.136, 0.0, 3.0),  # forward
     ]
 
     return routines

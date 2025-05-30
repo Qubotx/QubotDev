@@ -38,13 +38,13 @@ class zlac8015dBridge(Node):
 
         # Control parameters
         self.max_linear_vel = 0.5  # m/s
-        self.max_angular_vel = 0.5  # rad/s
+        self.max_angular_vel = 1.6  # rad/s
         self.max_rpm = 73  # Maximum motor RPM
         self.cmd_timeout = 0.15  # sec - se detiene si no se recibe cmd_vel
         self.min_cmd_interval = 0.05  # sec - minimum time between processing commands
 
         # Initialize motor controller
-        self.motors = ZLAC8015D.Controller(port="/dev/ttyUSB0")
+        self.motors = ZLAC8015D.Controller(port="/dev/ttyFT232")
 
         # Control state variables
         self.last_cmd_time = self.get_clock().now() - Duration(seconds=1.0)

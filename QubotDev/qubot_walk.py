@@ -18,6 +18,7 @@ class QubotWalk(Node):
 
         # Create publisher for cmd_vel
         self.cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel_safe", 10)
+        # self.cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
 
         # Create subscriber for control_cmd
         self.control_cmd_sub = self.create_subscription(
@@ -52,13 +53,17 @@ class QubotWalk(Node):
         self.get_logger().info(f"Received control command: {command}")
 
         # Handle pause/resume/stop commands for routines
-        if command == "pause":
+        if command == "pause" or command == "safety_pause":
             if self.current_routine is not None:
                 self.routine_paused = True
-                self.get_logger().info("Routine paused")
-                # Send stop command while paused
-                stop_twist = Twist()
-                self.cmd_vel_pub.publish(stop_twist)
+
+                if command == "pause":
+                    self.get_logger().info("Routine paused")
+                    # Send stop command while paused
+                    stop_twist = Twist()
+                    self.cmd_vel_pub.publish(stop_twist)
+                elif command == "safety_pause":
+                    self.get_logger().info("Routine paused due safety")
             else:
                 self.get_logger().warn("No routine running to pause")
             return
