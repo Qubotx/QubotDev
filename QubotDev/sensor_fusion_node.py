@@ -6,8 +6,7 @@ import serial
 import serial.tools.list_ports
 import time
 import threading
-from sensor_fusion import tfmplus as tfmP
-import uuid
+from QubotDev import tfmplus as tfmP
 
 
 class SensorFusionNode(Node):
